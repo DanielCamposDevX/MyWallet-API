@@ -35,7 +35,7 @@ catch (error) {
 const userschema = Joi.object({
     email: Joi.string().email().required(),
     password: Joi.string().min(3).required()
-  });
+});
 
 
 //// ENDPOINTS ////
@@ -43,6 +43,9 @@ const userschema = Joi.object({
 app.post("/signin", async (req, res) => {
     const { email, password } = req.body;
     const validation = userschema.validate({ email: email, password: password })
+    if(validation.error){
+        return res.send.status(422).send(error);
+    }
     try {
         const user = await db.collection('users').findOne({ email: email });
         if (!user) {
@@ -59,9 +62,29 @@ app.post("/signin", async (req, res) => {
     }
     catch (error) {
         return res.status(500).send(error);
-     }
+    }
 })
 
+app.post("/signup", async (req, res) => {
+    const { name, email, password } = req.body;
+    const validation = userschema.validate({ email: email, password: password })
+    if(validation.error){
+        return res.send.status(422).send(validation.error);
+    }
+    try{
+        const user = await db.collection('users').findOne({email: email});
+        if(!user){
+            await db.collection('users').insertOne({name:name, email:email, password:password});///Necessidade de criptografia
+            return res.status(201);
+        }
+        else{
+            return res.status(409).send('Email already in use');
+        }
+    }
+    catch(error){
+        return res.status(500).send(error);
+    }
+})
 
 
 
