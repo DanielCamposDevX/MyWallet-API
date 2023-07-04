@@ -10,18 +10,19 @@ import cors from "cors";
 /// Imports Database & Security
 import { MongoClient } from "mongodb";
 import dotenv from "dotenv";
+dotenv.config();
 
 
 /// API Connection ///
 const app = express();
 app.use(express.json());
-app.use(cors);
+app.use(cors());
 
 
 
 
 /// Database Connection ///
-const mongoClient = new MongoClient(process.env.DATABASE_URL);
+const mongoClient = new MongoClient('mongodb://localhost:27017/wallet');///process.env.DATABASE_URL
 let db;
 try {
     await mongoClient.connect()
@@ -42,12 +43,12 @@ const userschema = Joi.object({
 
 app.post("/signin", async (req, res) => {
     const { email, password } = req.body;
-    const validation = userschema.validate({ email: email, password: password })
+    const validation = userschema.validate({email, password })
     if(validation.error){
         return res.send.status(422).send(error);
     }
     try {
-        const user = await db.collection('users').findOne({ email: email });
+        const user = await db.collection('users').findOne({ email });
         if (!user) {
             return res.status(404).send('E-mail not found!');
         }
@@ -61,28 +62,28 @@ app.post("/signin", async (req, res) => {
         }
     }
     catch (error) {
-        return res.status(500).send(error);
+        return res.status(500).send(error.message);
     }
 })
 
 app.post("/signup", async (req, res) => {
     const { name, email, password } = req.body;
-    const validation = userschema.validate({ email: email, password: password })
+    const validation = userschema.validate({ email, password })
     if(validation.error){
         return res.send.status(422).send(validation.error);
     }
     try{
-        const user = await db.collection('users').findOne({email: email});
+        const user = await db.collection('users').findOne({email});
         if(!user){
-            await db.collection('users').insertOne({name:name, email:email, password:password});///Necessidade de criptografia
-            return res.status(201);
+            await db.collection('users').insertOne({name, email, password});///Necessidade de criptografia
+            return res.status(201).send('created');
         }
         else{
             return res.status(409).send('Email already in use');
         }
     }
     catch(error){
-        return res.status(500).send(error);
+        return res.status(500).send(error.message);
     }
 })
 
