@@ -1,5 +1,7 @@
 /// Package Imports ///
 import Joi from "joi";
+import bcrypt from "bcrypt";
+import { v4 as uuid } from "uuid";
 
 
 /// Imports API Connection & Security
@@ -27,7 +29,6 @@ let db;
 try {
     await mongoClient.connect()
     db = mongoClient.db()
-
 }
 catch (error) {
     console.log(error)
@@ -38,28 +39,24 @@ const userschema = Joi.object({
     password: Joi.string().min(3).required()
 });
 
-
 //// ENDPOINTS ////
 
 app.post("/signin", async (req, res) => {
     const { email, password } = req.body;
-    const validation = userschema.validate({email, password })
-    if(validation.error){
-        return res.send.status(422).send(error);
+    const validation = userschema.validate({ email, password }, { abortEarly: false })
+    if (validation.error) {
+        const errors = validation.error.details.map((detail) => detail.message);
+        res.status(422).send(errors)
     }
     try {
         const user = await db.collection('users').findOne({ email });
-        if (!user) {
-            return res.status(404).send('E-mail not found!');
-        }
-        else {
-            if (user.password === password) {
-                return res.status(200).send('TOKEN AQUI');//// Colocar um token /////
-            }
-            else {
-                return res.status(401).send('Wrong password');
-            }
-        }
+        const compare = bcrypt.compareSync(password, user.password);
+        if (!user) { return res.status(404).send('E-mail not found!'); }
+        if (!compare) { return res.status(401).send('Wrong password'); }
+
+        const token = uuid();
+        await db.collection("sessions").insertOne({ userId: user._id, token })
+        return res.status(200).send(token);
     }
     catch (error) {
         return res.status(500).send(error.message);
@@ -68,21 +65,20 @@ app.post("/signin", async (req, res) => {
 
 app.post("/signup", async (req, res) => {
     const { name, email, password } = req.body;
-    const validation = userschema.validate({ email, password })
-    if(validation.error){
-        return res.send.status(422).send(validation.error);
+    const validation = userschema.validate({ email, password }, { abortEarly: false })
+    if (validation.error) {
+        const errors = validation.error.details.map((detail) => detail.message);
+        res.status(422).send(errors)
     }
-    try{
-        const user = await db.collection('users').findOne({email});
-        if(!user){
-            await db.collection('users').insertOne({name, email, password});///Necessidade de criptografia
-            return res.status(201).send('created');
-        }
-        else{
-            return res.status(409).send('Email already in use');
-        }
+    try {
+        const user = await db.collection('users').findOne({ email:email });
+        if (user) { return res.status(409).send('Email already in use'); }
+
+        const hash = bcrypt.hashSync(password, 10);
+        await db.collection('users').insertOne({ name, email, password:hash });
+        return res.status(201).send('created');
     }
-    catch(error){
+    catch (error) {
         return res.status(500).send(error.message);
     }
 })
