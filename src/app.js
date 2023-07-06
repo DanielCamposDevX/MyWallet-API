@@ -24,7 +24,7 @@ app.use(cors());
 
 
 /// Database Connection ///
-const mongoClient = new MongoClient('mongodb://localhost:27017/wallet');///process.env.DATABASE_URL
+const mongoClient = new MongoClient(process.env.DATABASE_URL);
 let db;
 try {
     await mongoClient.connect()
