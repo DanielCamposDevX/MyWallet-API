@@ -134,7 +134,7 @@ app.post("/signup", async (req, res) => {
 
 app.post("/logoff", async (req, res) => {
     const { Authorization } = req.headers;
-    const token = Authorization?.replace("Bearer", "");
+    const token = Authorization?.replace("Bearer ", "");
     try {
         await db.collection("sessions").deleteOne({ token: token });
     }
