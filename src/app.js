@@ -55,8 +55,7 @@ app.get(("/transactions"), async (req, res) => {
         if (!token) { return res.status(401).send("Token error") }
         const session = await db.collection("sessions").findOne({ token });
         if (!session) { return res.status(401).send("Session Expired") }
-
-        const transactions = await db.collection("transactions").find({ sessionId: session.userId }).toArray();
+        const transactions = await db.collection("transactions").find({ userId: session.userId }).toArray();
         return res.send(transactions)
     }
     catch (error) {
