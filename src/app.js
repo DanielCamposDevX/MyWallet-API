@@ -78,7 +78,7 @@ app.post(("/transactions"), async (req, res) => {
         const validation = transactionschema.validate(data, { abortEarly: false });
         if (validation.error) {
             const errors = validation.error.details.map((detail) => detail.message);
-            res.status(422).send(errors);
+            return res.status(422).send(errors);
         }
         const transaction = { data, sessionId: session.userId, date: dayjs().format('DD/MM') };
         await db.collection("transactions").insertOne(transaction);
