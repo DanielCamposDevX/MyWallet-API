@@ -52,9 +52,9 @@ app.get(("/transactions"), async (req, res) => {
     const { authorization } = req.headers;
     const token = authorization?.replace("Bearer", "");
     try {
-        if (!token) { return res.sendStatus(401) }
+        if (!token) { return res.status(401).send("Token error") }
         const session = await db.collection("sessions").findOne({ token });
-        if (!session) { return res.status(401).send("Unauthorized") }
+        if (!session) { return res.status(401).send("Session Expired") }
 
         const transactions = await db.collection("transactions").find({ sessionId: session.userId }).toArray();
         return res.send(transactions)
