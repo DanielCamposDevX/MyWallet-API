@@ -101,7 +101,7 @@ app.post("/signin", async (req, res) => {
         const compare = bcrypt.compareSync(password, user.password);
         if (!compare) { return res.status(401).send('Wrong password'); }
 
-        const exists = await db.collection("sessions").findOne(user.id)
+        const exists = await db.collection("sessions").findOne(user._id)
         if (exists) { return res.status(200).send(exists.token) }
         const token = uuid();
         await db.collection("sessions").insertOne({ userId: user._id, token })
