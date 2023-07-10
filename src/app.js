@@ -42,7 +42,7 @@ const userschema = Joi.object({
 const transactionschema = Joi.object({
     value: Joi.number().positive().required(),
     description: Joi.string().required(),
-    type: Joi.string().valid("in", "out")
+    type: Joi.string().valid("entrada", "saida")
 })
 
 //// ENDPOINTS ////
@@ -71,7 +71,7 @@ app.post(("/transactions"), async (req, res) => {
         if (!token) { return res.status(401).send("Token Error") }
         const session = await db.collection("sessions").findOne({ token });
         if (!session) { return res.status(401).send("Session Expired") }
-       
+
         const { value, description, type } = req.body;
         const data = { value, description, type };
         const validation = transactionschema.validate(data, { abortEarly: false });
@@ -102,10 +102,10 @@ app.post("/signin", async (req, res) => {
         if (!compare) { return res.status(401).send('Wrong password'); }
 
         const exists = await db.collection("sessions").findOne(user._id)
-        if (exists) { return res.status(200).send({token:exists.token,name:user.name}) }
+        if (exists) { return res.status(200).send({ token: exists.token, name: user.name }) }
         const token = uuid();
         await db.collection("sessions").insertOne({ userId: user._id, token })
-        return res.status(200).send({token,name: user.name});
+        return res.status(200).send({ token, name: user.name });
     }
     catch (error) {
         return res.status(500).send(error.message);
