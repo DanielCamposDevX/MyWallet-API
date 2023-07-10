@@ -135,9 +135,12 @@ app.post("/signup", async (req, res) => {
 app.post("/logoff", async (req, res) => {
     const { authorization } = req.headers;
     const token = authorization?.replace("Bearer ", "");
+    console.log(token)
     try {
-        await db.collection("sessions").deleteOne({ token: token });
-        return res.status(200).send("logged off")
+        const user = await db.collection("sessions").findOne({ token: token });
+        if(!user){ return res.status(404).send("User Error")};
+        await db.collection("sessions").deleteOne(user);
+        return res.status(200).send("logged off");
     }
     catch (error) {
         return res.status(500).send(error.message);
