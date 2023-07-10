@@ -67,7 +67,7 @@ app.get(("/transactions"), async (req, res) => {
 
 app.post(("/transactions"), async (req, res) => {
     const { Authorization } = req.headers;
-    const token = Authorization?.replace("Bearer", "");
+    const token = Authorization?.replace("Bearer ", "");
     try {
         const session = await db.collection("sessions").findOne({ token: token });
         if (!session) { return res.sendStatus(401).send("Unauthorized") }
