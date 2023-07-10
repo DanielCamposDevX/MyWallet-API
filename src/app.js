@@ -2,6 +2,7 @@
 import Joi from "joi";
 import bcrypt from "bcrypt";
 import { v4 as uuid } from "uuid";
+import dayjs from "dayjs";
 
 
 /// Imports API Connection & Security
@@ -58,7 +59,7 @@ app.get(("/transactions"), async (req, res) => {
         return res.send(transactions)
     }
     catch (error) {
-        res.status(500).send(error);
+        res.status(500).send(error.message);
     }
 })
 
@@ -77,7 +78,7 @@ app.post(("/transactions"), async (req, res) => {
             const errors = validation.error.details.map((detail) => detail.message);
             res.status(422).send(errors);
         }
-        const transaction = { data, sessionId: session.userId };
+        const transaction = { data, sessionId: session.userId , date:dayjs().format('DD/MM') };
         await db.collection("transactions").insertOne(transaction);
         return res.status(201).send("Created")
     }
@@ -137,7 +138,7 @@ app.post("/logoff", async (req, res) => {
         await db.collection("sessions").deleteOne({ token: token });
     }
     catch (error) {
-        return res.status(500).send(error);
+        return res.status(500).send(error.message);
     }
 })
 
