@@ -52,9 +52,10 @@ app.get(("/transactions"), async (req, res) => {
     const { authorization } = req.headers;
     const token = authorization?.replace("Bearer", "");
     try {
-        const session = await db.collection("sessions").findOne({ token: token });
-        if (!session) { return res.sendStatus(401).send("Unauthorized") }
         if (!token) { return res.sendStatus(401) }
+        const session = await db.collection("sessions").findOne({ token });
+        if (!session) { return res.status(401).send("Unauthorized") }
+
         const transactions = await db.collection("transactions").find({ sessionId: session.userId }).toArray();
         return res.send(transactions)
     }
@@ -65,8 +66,8 @@ app.get(("/transactions"), async (req, res) => {
 
 
 app.post(("/transactions"), async (req, res) => {
-    const { authorization } = req.headers;
-    const token = authorization?.replace("Bearer", "");
+    const { Authorization } = req.headers;
+    const token = Authorization?.replace("Bearer", "");
     try {
         const session = await db.collection("sessions").findOne({ token: token });
         if (!session) { return res.sendStatus(401).send("Unauthorized") }
@@ -78,7 +79,7 @@ app.post(("/transactions"), async (req, res) => {
             const errors = validation.error.details.map((detail) => detail.message);
             res.status(422).send(errors);
         }
-        const transaction = { data, sessionId: session.userId , date:dayjs().format('DD/MM') };
+        const transaction = { data, sessionId: session.userId, date: dayjs().format('DD/MM') };
         await db.collection("transactions").insertOne(transaction);
         return res.status(201).send("Created")
     }
@@ -92,12 +93,12 @@ app.post("/signin", async (req, res) => {
     const validation = userschema.validate({ email, password }, { abortEarly: false })
     if (validation.error) {
         const errors = validation.error.details.map((detail) => detail.message);
-        res.status(422).send(errors);
+        return res.status(422).send(errors);
     }
     try {
         const user = await db.collection('users').findOne({ email });
-        const compare = bcrypt.compareSync(password, user.password);
         if (!user) { return res.status(404).send('E-mail not found!'); }
+        const compare = bcrypt.compareSync(password, user.password);
         if (!compare) { return res.status(401).send('Wrong password'); }
 
         const exists = await db.collection("sessions").findOne(user.id)
@@ -132,8 +133,8 @@ app.post("/signup", async (req, res) => {
 })
 
 app.post("/logoff", async (req, res) => {
-    const { authorization } = req.headers;
-    const token = authorization?.replace("Bearer", "");
+    const { Authorization } = req.headers;
+    const token = Authorization?.replace("Bearer", "");
     try {
         await db.collection("sessions").deleteOne({ token: token });
     }
