@@ -102,10 +102,10 @@ app.post("/signin", async (req, res) => {
         if (!compare) { return res.status(401).send('Wrong password'); }
 
         const exists = await db.collection("sessions").findOne(user._id)
-        if (exists) { return res.status(200).send(exists.token) }
+        if (exists) { return res.status(200).send({token:exists.token,name:user.name}) }
         const token = uuid();
         await db.collection("sessions").insertOne({ userId: user._id, token })
-        return res.status(200).send(token);
+        return res.status(200).send({token,name: user.name});
     }
     catch (error) {
         return res.status(500).send(error.message);
