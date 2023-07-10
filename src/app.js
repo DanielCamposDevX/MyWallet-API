@@ -50,7 +50,7 @@ const transactionschema = Joi.object({
 
 app.get(("/transactions"), async (req, res) => {
     const { authorization } = req.headers;
-    const token = authorization?.replace("Bearer", "");
+    const token = authorization?.replace("Bearer ", "");
     try {
         if (!token) { return res.status(401).send("Token error") }
         const session = await db.collection("sessions").findOne({ token });
