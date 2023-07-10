@@ -69,9 +69,10 @@ app.post(("/transactions"), async (req, res) => {
     const { Authorization } = req.headers;
     const token = Authorization?.replace("Bearer ", "");
     try {
-        const session = await db.collection("sessions").findOne({ token: token });
-        if (!session) { return res.sendStatus(401).send("Unauthorized") }
-        if (!token) { return res.sendStatus(401) }
+        if (!token) { return res.status(401).send("Token Error") }
+        const session = await db.collection("sessions").findOne({ token });
+        if (!session) { return res.status(401).send("Session Expired") }
+       
         const { value, description, type } = req.body;
         const data = { value, description, type };
         const validation = transactionschema.validate(data, { abortEarly: false });
