@@ -101,10 +101,10 @@ app.post("/signin", async (req, res) => {
         const compare = bcrypt.compareSync(password, user.password);
         if (!compare) { return res.status(401).send('Wrong password'); }
 
-        const exists = await db.collection("sessions").findOne(user._id)
-        if (exists) { return res.status(200).send({ token: exists.token, name: user.name }) }
+        const exists = await db.collection("sessions").findOne({ userId: user._id });
+        if (exists) { return res.status(200).send({ token: exists.token, name: user.name }) };
         const token = uuid();
-        await db.collection("sessions").insertOne({ userId: user._id, token })
+        await db.collection("sessions").insertOne({ userId: user._id, token });
         return res.status(200).send({ token, name: user.name });
     }
     catch (error) {
@@ -137,6 +137,7 @@ app.post("/logoff", async (req, res) => {
     const token = Authorization?.replace("Bearer ", "");
     try {
         await db.collection("sessions").deleteOne({ token: token });
+        return res.status(200).send("logged off")
     }
     catch (error) {
         return res.status(500).send(error.message);
