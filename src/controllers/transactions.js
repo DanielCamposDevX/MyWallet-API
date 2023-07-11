@@ -1,20 +1,11 @@
 /// Package Imports ///
-import Joi from "joi";
 import dayjs from "dayjs";
-
 /// Configs imports ///
-import { db } from "../app.js";
-
-
+import { db } from "../database/database.connection.js";
 /// Joi Schema ///
-const transactionschema = Joi.object({
-    value: Joi.number().positive().required(),
-    description: Joi.string().required(),
-    type: Joi.string().valid("entrada", "saida")
-})
+import { transactionschema } from "../schemas/transactions.schemas.js";
 
 /// ENDPOINTS ///
-
 export async function gettransactions(req, res) {
     const { authorization } = req.headers;
     const token = authorization?.replace("Bearer ", "");

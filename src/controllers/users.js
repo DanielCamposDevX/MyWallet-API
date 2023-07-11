@@ -1,21 +1,13 @@
 /// Package Imports ///
 import { v4 as uuid } from "uuid";
-import Joi from "joi";
 import bcrypt from "bcrypt";
-
-
 /// Configs imports ///
-import { db } from "../app.js";
-
+import { db } from "../database/database.connection.js";
 /// Joi Schema ///
-const userschema = Joi.object({
-    email: Joi.string().email().required(),
-    password: Joi.string().min(3).required(),
-});
+import { userschema } from "../schemas/users.schemas.js";
 
 /// ENDPOINTS ///
 export async function signin(req, res) {
-
     const { email, password } = req.body;
     const validation = userschema.validate({ email, password }, { abortEarly: false })
     if (validation.error) {
